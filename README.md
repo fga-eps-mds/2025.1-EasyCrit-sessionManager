@@ -25,11 +25,11 @@ docker-compose up -d sessionManager
 ## Variáveis de ambiente
 | Variável de ambiente | Descrição |
 |----------------------|-----------|
-| `SESSION_MANAGER_PORT` | Porta que o serviço irá rodar. |
+| `SESSIONMANAGER_PORT` | Porta que o serviço irá rodar. |
 
 ## Documentação
 É possível acessar a documentação do projeto através do Swagger, que está disponível na seguinte URL:
 ```
-http://localhost:{AUTH_PORT}/docs
+http://localhost:{SESSIONMANAGER_PORT}/docs
 ```
 A documentação é gerada automaticamente a partir dos comentários do código, utilizando o Swagger UI. Para mais informações sobre como utilizar o Swagger, consulte a [documentação oficial](https://swagger.io/docs/).
