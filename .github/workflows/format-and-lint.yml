@@ -1,0 +1,49 @@
+name: format & lint
+on: [push]
+
+jobs:
+  Format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🖌️ Analise de estilo de código
+        run: echo "🖌️ Analisando código para encontrar erros de estilo."
+
+      - name: 🔦 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🧰 Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 🎨 Ruff format
+        run: |
+          pip install -r requirements.txt
+          ruff format --check .
+
+      - name: ❌ Em caso de falha
+        if: failure()
+        run: echo "🚫 O ruff encontrou erros de estilo" && echo "Use o comando 'ruff format' para corrigi-los automaticamente"
+
+  Check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧼 Analise estática de código
+        run: echo "🧼 Procurando por erros de bugs, além de erros de estilo de código"
+
+      - name: 🔦 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🧰 Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 🛁  Ruff check
+        run: |
+          pip install -r requirements.txt
+          ruff check .
+
+      - name: ❌ Em caso de falha
+        if: failure()
+        run: echo "🚫 O ruff encontrou possíveis erros, bugs ou erros de estilo no código" && echo "Use o comando 'ruff check .' para visualizar os erros e corrigi-los"
