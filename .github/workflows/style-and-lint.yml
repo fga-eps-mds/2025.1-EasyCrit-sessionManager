@@ -1,0 +1,45 @@
+name: style & lint
+on: [push]
+
+jobs:
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🖌️ Analise de estilo no código
+        run: echo "🖌️ Analizando e corrigindo código para encontrar erros de estilo."
+      
+      - name: 🔦 Checkout
+        uses: actions/checkout@v4
+        
+      - name: 🧰 Setup node
+        uses: actions/setup-node@v4
+
+      - name: 🎨 Prettier
+        run: |
+          npm i
+          npm run check-style
+
+      - name: ❌ Em caso de falha
+        if: failure()
+        run: echo "🚫 O prettier encotrou erros de estilo" && echo "Use o comando 'npm run style' para corrigir automaticamente"
+
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧼 Análise estática de código
+        run: echo "🧼 Procurando por erros e bugs, além de erros de estilo no código"
+
+      - name: 🔦 Checkout
+        uses: actions/checkout@v4
+        
+      - name: 🧰 Setup node
+        uses: actions/setup-node@v4
+
+      - name: 🛁 eslint
+        run: |
+          npm i
+          npm run lint
+      
+      - name: ❌ Em caso de falha
+        if: failure()
+        run: echo "🚫 O eslint encontrou possíveis erros, bugs ou erros de estilo no código" && echo "Use o comando 'npm run lint' para visualizar os erros e corrigi-los"
