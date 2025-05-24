@@ -17,6 +17,7 @@ app.add_middleware(
 
 app.add_middleware(JWTAuthMiddleware)
 
+
 @app.get('/')
 def read_root():
   return {'message': 'Bem vindo à API de controle de sessão!'}
