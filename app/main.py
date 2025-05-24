@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.middleware.auth import JWTAuthMiddleware
 
 app = FastAPI()
 
@@ -13,6 +14,8 @@ app.add_middleware(
   allow_methods=['*'],
   allow_headers=['*'],
 )
+
+app.add_middleware(JWTAuthMiddleware)
 
 
 @app.get('/')
