@@ -10,4 +10,4 @@ COPY ./app ./app
 
 COPY .env .env
 
-EXPOSE ${SESSIONMANAGER_PORT}
+EXPOSE ${SESSION_PORT}
