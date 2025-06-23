@@ -4,15 +4,13 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.database.database import create_tables
 from app.routers import invite
 
 load_dotenv()
 
-
 DATABASE_URL = os.getenv("DATABASE_URL")
 print("DATABASE_URL carregado:", DATABASE_URL)
-
-from app.database.database import create_tables
 
 create_tables()
 
