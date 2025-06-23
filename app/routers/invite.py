@@ -85,7 +85,7 @@ def consume_invite_and_redirect(
   return RedirectResponse(url=f'{FRONTEND_URL}/dashboard-player')
 
 
-# ENDPOINT CREATION OF SESSION AND TEST
+# ENDPOINT CREATION OF SESSION TEST
 @router.post('/api/session/create')
 def create_session(db: Session = Depends(get_db)):
   new_session = GameSession(name='Sessão de Teste', created_at=datetime.utcnow())
