@@ -44,7 +44,7 @@
 
             // function for conecting to the websocket server, by id
             function connect() {
-                ws = new WebSocket(`ws://localhost:8000/ws/connect/${clientId}`);
+                ws = new WebSocket(`ws://${window.location.hostname}:8002/ws/connect/${clientId}`);
                 
                 ws.onopen = function() {
                     const status = document.getElementById('connection-status');
