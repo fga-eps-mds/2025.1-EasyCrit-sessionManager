@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.middleware.auth import JWTAuthMiddleware
 
+from fastapi.staticfiles import StaticFiles
+from app.websocket import router as websocket_router
+
 app = FastAPI()
 
 # adicionar CORS
@@ -15,7 +18,14 @@ app.add_middleware(
   allow_headers=['*'],
 )
 
+
 app.add_middleware(JWTAuthMiddleware)
+
+# http://127.0.0.1:8000/static/websocket_test.html
+app.mount('/static', StaticFiles(directory='static'), name='static')
+
+# includes the router websocket
+app.include_router(websocket_router)
 
 
 @app.get('/')
