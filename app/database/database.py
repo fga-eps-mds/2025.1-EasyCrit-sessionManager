@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, Text, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker
 import os
 
 DATABASE_URL = os.getenv('DATABASE_URL')
@@ -22,22 +22,13 @@ SessionLocal = sessionmaker(
 Base = declarative_base()
 
 
-class Player(Base):
-  __tablename__ = 'player'
-  player_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-  player_name = Column(Text, unique=True, nullable=False)
-
-  characters = relationship('Character', back_populates='owner')
-
-
 class Character(Base):
   __tablename__ = 'character'
+
   character_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
   character_name = Column(Text, index=True, unique=True, nullable=False)
   biography = Column(Text, default=None)
-  player_id = Column(Integer, ForeignKey('player.player_id'), nullable=False)
-
-  owner = relationship('Player', back_populates='characters')
+  player_id = Column(Integer, nullable=False)
 
 
 def get_db():
@@ -51,6 +42,7 @@ def get_db():
 def create_tables():
   db_path = DATABASE_URL.replace('sqlite:///./', './')
   if os.path.exists(db_path) and db_path.endswith('test.db'):
+    print(f'Deleting existing database file: {db_path}')
     os.remove(db_path)
 
   Base.metadata.create_all(bind=engine)
