@@ -4,11 +4,10 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import Optional
 from dotenv import load_dotenv
-import os
-
-load_dotenv()
 
 from app.database.database import get_db, create_tables, create_character as create_character_db
+
+load_dotenv()
 
 app = FastAPI()
 
