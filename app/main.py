@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -6,6 +8,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from app.database.database import get_db, create_tables, create_character as create_character_db
+from app.routers import invite
 
 load_dotenv()
 
@@ -29,7 +32,6 @@ app.add_middleware(
 )
 
 app.include_router(invite.router)
-
 
 
 class CharacterBase(BaseModel):
