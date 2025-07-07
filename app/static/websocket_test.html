@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat</title>
+        <style>
+            #connection-status {
+                padding: 10px;
+                margin: 10px 0;
+                border-radius: 4px;
+            }
+            .connected {
+                background-color: #dff0d8;
+                color: #3c763d;
+            }
+            .disconnected {
+                background-color: #f2dede;
+                color: #a94442;
+            }
+            #messages {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+            }
+            #messages li {
+                padding: 5px 10px;
+                background: #f8f9fa;
+                margin: 5px 0;
+                border-radius: 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>WebSocket Chat</h1>
+        <div id="connection-status" class="disconnected">Desconectado</div>
+        <form action="" onsubmit="sendMessage(event)">
+            <input type="text" id="messageText" autocomplete="off"/>
+            <button>Enviar</button>
+        </form>
+        <ul id='messages'>
+        </ul>
+        <script>
+            const clientId = 'client-' + Math.random().toString(36).substring(7);
+            let ws;
+
+            // function for conecting to the websocket server, by id
+            function connect() {
+                ws = new WebSocket(`ws://${window.location.hostname}:8002/ws/connect/${clientId}`);
+                
+                ws.onopen = function() {
+                    const status = document.getElementById('connection-status');
+                    status.textContent = 'Conectado';
+                    status.className = 'connected';
+                };
+
+                ws.onclose = function() {
+                    const status = document.getElementById('connection-status');
+                    status.textContent = 'Desconectado - Tentando reconectar...';
+                    status.className = 'disconnected';
+                    setTimeout(connect, 1000);
+                };
+
+                ws.onmessage = function(event) {
+                    var messages = document.getElementById('messages')
+                    var message = document.createElement('li')
+                    var content = document.createTextNode(event.data)
+                    message.appendChild(content)
+                    messages.appendChild(message)
+                };
+            }
+
+            function sendMessage(event) {
+                var input = document.getElementById("messageText")
+                if (input.value && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ message: input.value }))
+                    input.value = ''
+                }
+                event.preventDefault()
+            }
+
+            connect();
+        </script>
+    </body>
+</html>
