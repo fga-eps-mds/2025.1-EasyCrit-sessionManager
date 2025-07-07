@@ -9,10 +9,12 @@ from app.database.database import get_db, create_tables, create_character as cre
 
 load_dotenv()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_tables()  # substitui o @app.on_event('startup')
-    yield
+  create_tables()  # substitui o @app.on_event('startup')
+  yield
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -41,6 +43,7 @@ class CharacterResponse(CharacterBase):
   character_id: int
 
   model_config = ConfigDict(from_attributes=True)
+
 
 @app.get('/')
 def read_root():
