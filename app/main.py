@@ -1,15 +1,20 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from dotenv import load_dotenv
-
+from contextlib import asynccontextmanager
 from app.database.database import get_db, create_tables, create_character as create_character_db
 
 load_dotenv()
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_tables()  # substitui o @app.on_event('startup')
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 origins = '*'
 
@@ -35,14 +40,7 @@ class CharacterCreate(CharacterBase):
 class CharacterResponse(CharacterBase):
   character_id: int
 
-  class Config:
-    from_attributes = True
-
-
-@app.on_event('startup')
-def on_startup():
-  create_tables()
-
+  model_config = ConfigDict(from_attributes=True)
 
 @app.get('/')
 def read_root():
