@@ -1,24 +1,27 @@
 import os
 
-from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
-from app.middleware.auth import JWTAuthMiddleware
-
-from fastapi.staticfiles import StaticFiles
-from app.websocket import router as websocket_router
-
-from app.database.database import create_tables
+from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional
+from dotenv import load_dotenv
+from contextlib import asynccontextmanager
+from app.database.database import get_db, create_tables, create_character as create_character_db
 from app.routers import invite
 
 load_dotenv()
 
-DATABASE_URL = os.getenv('DATABASE_URL')
-print('DATABASE_URL carregado:', DATABASE_URL)
 
-create_tables()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+  create_tables()  # substitui o @app.on_event('startup')
+  yield
 
-app = FastAPI()
+
+app = FastAPI(lifespan=lifespan)
+
+origins = '*'
 
 app.add_middleware(
   CORSMiddleware,
@@ -31,15 +34,40 @@ app.add_middleware(
 app.include_router(invite.router)
 
 
-app.add_middleware(JWTAuthMiddleware)
+class CharacterBase(BaseModel):
+  character_name: str = Field(..., min_length=1, max_length=100)
+  biography: Optional[str] = Field(None, max_length=1000)
+  player_id: int = Field(..., gt=0)
 
-# http://127.0.0.1:8000/static/websocket_test.html
-app.mount('/static', StaticFiles(directory='static'), name='static')
 
-# includes the router websocket
-app.include_router(websocket_router)
+class CharacterCreate(CharacterBase):
+  pass
+
+
+class CharacterResponse(CharacterBase):
+  character_id: int
+
+  model_config = ConfigDict(from_attributes=True)
 
 
 @app.get('/')
 def read_root():
-  return {'message': 'Bem-vindo à API de controle de sessão!'}
+  return {'message': 'Welcome to the Character Creation API! Use /docs to see endpoints.'}
+
+
+@app.post('/characters/', response_model=CharacterResponse, status_code=status.HTTP_201_CREATED)
+def create_character_endpoint(character_data: CharacterCreate, db: Session = Depends(get_db)):
+  if not character_data.character_name.strip():
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST, detail='Character name cannot be empty or just whitespace.'
+    )
+
+  result = create_character_db(db, character_data)
+
+  if result == 'conflict':
+    raise HTTPException(
+      status_code=status.HTTP_409_CONFLICT,
+      detail=f"A character with the name '{character_data.character_name}' already exists.",
+    )
+
+  return result

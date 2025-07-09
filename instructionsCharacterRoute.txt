@@ -1,0 +1,121 @@
+How to Run the Character Creation API Project
+
+This guide provides instructions to set up and run the Character Creation API, which is part of the EasyCrit Session Manager microservice.
+1. Prerequisites
+
+Ensure you have the following installed on your machine:
+
+    Git: For cloning the repository.
+
+        Download: https://git-scm.com/downloads
+
+    Python 3: (Python 3.8+ recommended).
+
+        Download: https://www.python.org/downloads/
+
+        On Windows, ensure "Add Python to PATH" is checked during installation.
+
+        On Linux/macOS, python3 command might be required instead of python.
+
+2. Clone the Repository
+
+Open your terminal (or Command Prompt/PowerShell on Windows) and navigate to the directory where you want to store the project. Then, clone the repository:
+
+git clone [https://github.com/fga-eps-mds/2025.1-EasyCrit-sessionManager.git](https://github.com/fga-eps-mds/2025.1-EasyCrit-sessionManager.git)
+
+3. Navigate to the Project Directory
+
+Enter the newly cloned project folder:
+
+cd 2025.1-EasyCrit-sessionManager
+
+All subsequent commands should be executed from this directory.
+4. Create and Activate a Virtual Environment
+
+It's highly recommended to use a virtual environment to isolate project dependencies.
+
+# Create the virtual environment
+python3 -m venv venv
+
+# Activate the virtual environment
+# On Linux/macOS:
+source venv/bin/activate
+# On Windows (CMD):
+# .\venv\Scripts\activate.bat
+# On Windows (PowerShell):
+# .\venv\Scripts\Activate.ps1
+
+You'll see (venv) at the beginning of your terminal prompt when activated.
+5. Install Project Dependencies
+
+With the virtual environment active, install all required libraries listed in requirements.txt:
+
+pip install -r requirements.txt
+
+6. Create the .env File
+
+The project uses environment variables managed by a .env file.
+
+    Create a file named .env in the root of your project directory (2025.1-EasyCrit-sessionManager/).
+
+    Add the following line to the .env file:
+
+    DATABASE_URL=sqlite:///./test.db
+
+    Save the .env file.
+
+7. Run the FastAPI Application
+
+Start the API server:
+
+uvicorn app.main:app --reload
+
+You should see messages indicating the server startup and database table creation. Look for INFO: Application startup complete.
+8. Access the API Documentation (Swagger UI)
+
+Open your web browser and go to:
+
+[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+You will see the interactive API documentation (Swagger UI).
+9. Test the Character Creation Endpoint
+
+The primary endpoint for this service is POST /characters/.
+
+    Successful Character Creation (201 Created):
+
+        Expand POST /characters/.
+
+        Click "Try it out".
+
+        In the "Request body", use a valid JSON. Since player management is external, you can use any integer for player_id (e.g., 1).
+
+        {
+          "character_name": "MyNewChar",
+          "biography": "A short story about my character.",
+          "player_id": 1
+        }
+
+        Click "Execute".
+
+        Expected Response: Code: 201 and a JSON object with character_name, biography, player_id, and a generated character_id.
+
+    Error: Empty/Whitespace Character Name (400 Bad Request):
+
+        Change character_name to "" or "   ".
+
+        Expected Response: Code: 400 and {"detail":"Character name cannot be empty or just whitespace."}.
+
+    Error: Duplicate Character Name (409 Conflict):
+
+        Try to create a character with a character_name that already exists (e.g., "MyNewChar" again).
+
+        Expected Response: Code: 409 and {"detail":"A character with the name 'MyNewChar' already exists."}.
+
+    Error: Validation Error (422 Unprocessable Content):
+
+        Try invalid data, e.g., player_id as a string ("abc") or character_name exceeding 100 characters.g
+
+        Expected Response: Code: 422 and a detailed JSON error message from Pydantic.
+
+By following these steps, you can ensure the project is running correctly and the character creation functionality is working as expected.
