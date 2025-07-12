@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, Text
+from sqlalchemy import create_engine, Column, Integer, Text, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
@@ -8,9 +8,11 @@ if not DATABASE_URL:
   DATABASE_URL = 'sqlite:///./test.db'
   print(f'AVISO: A variável de ambiente DATABASE_URL não foi definida. Usando "{DATABASE_URL}" como padrão.')
 
+connect_args = {'check_same_thread': False} if 'sqlite' in DATABASE_URL else {}
+
 engine = create_engine(
   DATABASE_URL,
-  connect_args={'check_same_thread': False} if 'sqlite' in DATABASE_URL else {},
+  connect_args=connect_args,
 )
 
 SessionLocal = sessionmaker(
@@ -40,13 +42,24 @@ def get_db():
 
 
 def create_tables():
-  db_path = DATABASE_URL.replace('sqlite:///./', './')
-  if os.path.exists(db_path) and db_path.endswith('test.db'):
-    print(f'Deleting existing database file: {db_path}')
-    os.remove(db_path)
+  if 'sqlite' in DATABASE_URL and os.path.exists('./test.db'):
+      print('Excluindo arquivo de banco de dados existente: ./test.db')
+      os.remove('./test.db')
 
-  Base.metadata.create_all(bind=engine)
-  print('Database tables created (or already exist).')
+  try:
+      with engine.connect() as connection:
+          connection.execute(text('CREATE SCHEMA IF NOT EXISTS session_manager'))
+          connection.commit()
+          print('Schema "session_manager" criado ou já existe.')
+  except Exception as e:
+      print(f'Erro ao criar schema "session_manager": {e}')
+
+  try:
+      Base.metadata.create_all(bind=engine)
+      print('Tabelas do banco de dados criadas (ou já existem).')
+  except Exception as e:
+      print(f'Erro ao criar tabelas: {e}')
+      raise
 
 
 def get_character_by_name(db_session, character_name: str):
