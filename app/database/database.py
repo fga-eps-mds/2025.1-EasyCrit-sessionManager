@@ -5,12 +5,12 @@ import os
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if not DATABASE_URL:
-    DATABASE_URL = 'sqlite:///./test.db'
-    print(f'AVISO: A variável de ambiente DATABASE_URL não foi definida. Usando "{DATABASE_URL}" como padrão.')
+  DATABASE_URL = 'sqlite:///./test.db'
+  print(f'AVISO: A variável de ambiente DATABASE_URL não foi definida. Usando "{DATABASE_URL}" como padrão.')
 
 engine = create_engine(
-    DATABASE_URL,
-    connect_args={'check_same_thread': False} if 'sqlite' in DATABASE_URL else {},
+  DATABASE_URL,
+  connect_args={'check_same_thread': False} if 'sqlite' in DATABASE_URL else {},
 )
 
 SessionLocal = sessionmaker(

@@ -6,36 +6,34 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db, create_tables, create_character as create_character_db
 from app.middleware.auth import JWTAuthMiddleware
-from app.websocket import router as websocket_router
 from app.routers import invite
 from app import models, schemas
-from sqlalchemy.orm import Session
 
 load_dotenv()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Contexto para gerenciar o ciclo de vida da aplicação.
-    Executa `create_tables()` na inicialização.
-    """
-    print("Iniciando a aplicação e criando tabelas...")
-    create_tables()
-    yield
-    print("Finalizando a aplicação.")
+  """
+  Contexto para gerenciar o ciclo de vida da aplicação.
+  Executa `create_tables()` na inicialização.
+  """
+  print('Iniciando a aplicação e criando tabelas...')
+  create_tables()
+  yield
+  print('Finalizando a aplicação.')
+
 
 app = FastAPI(
-    lifespan=lifespan,
-    title='EasyCrit - Session Manager',
-    description='Microserviço para gerenciamento de sessões de RPG.',
-    version='0.1.0',
+  lifespan=lifespan,
+  title='EasyCrit - Session Manager',
+  description='Microserviço para gerenciamento de sessões de RPG.',
+  version='0.1.0',
 )
 
 origins = '*'
@@ -52,36 +50,38 @@ app.include_router(invite.router)
 
 
 class CharacterBase(BaseModel):
-    character_name: str = Field(..., min_length=1, max_length=100)
-    biography: Optional[str] = Field(None, max_length=1000)
-    player_id: int = Field(..., gt=0)
+  character_name: str = Field(..., min_length=1, max_length=100)
+  biography: Optional[str] = Field(None, max_length=1000)
+  player_id: int = Field(..., gt=0)
+
 
 app.add_middleware(JWTAuthMiddleware)
 
-@app.post(
-    '/campaigns',
-    response_model=schemas.Campaign, 
-    status_code=status.HTTP_201_CREATED,
-    tags=['Campaigns'],
-)
-def create_campaign(campaign: schemas.CampaignCreate, db: Session = Depends(get_db)): 
-    """
-    Cria uma nova campanha no banco de dados.
-    """
-    db_campaign = models.Session(**campaign.model_dump())
 
-    try:
-        db.add(db_campaign)
-        db.commit()
-        db.refresh(db_campaign)
-        return db_campaign
-    except Exception as e:
-        db.rollback()
-        print(f"Erro ao criar campanha: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Ocorreu um erro interno ao criar a campanha.'
-        )
+@app.post(
+  '/campaigns',
+  response_model=schemas.Campaign,
+  status_code=status.HTTP_201_CREATED,
+  tags=['Campaigns'],
+)
+def create_campaign(campaign: schemas.CampaignCreate, db: Session = Depends(get_db)):
+  """
+  Cria uma nova campanha no banco de dados.
+  """
+  db_campaign = models.Session(**campaign.model_dump())
+
+  try:
+    db.add(db_campaign)
+    db.commit()
+    db.refresh(db_campaign)
+    return db_campaign
+  except Exception as e:
+    db.rollback()
+    print(f'Erro ao criar campanha: {e}')
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Ocorreu um erro interno ao criar a campanha.'
+    )
+
 
 class CharacterCreate(CharacterBase):
   pass
