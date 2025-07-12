@@ -1,25 +1,40 @@
 import os
 
-from fastapi import FastAPI, HTTPException, Depends, status
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
-from dotenv import load_dotenv
 from contextlib import asynccontextmanager
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, Depends, status, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field, ConfigDict
+from sqlalchemy.orm import Session
+
 from app.database.database import get_db, create_tables, create_character as create_character_db
+from app.middleware.auth import JWTAuthMiddleware
 from app.routers import invite
+from app import models, schemas
 
 load_dotenv()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-  create_tables()  # substitui o @app.on_event('startup')
+  """
+  Contexto para gerenciar o ciclo de vida da aplicação.
+  Executa `create_tables()` na inicialização.
+  """
+  print('Iniciando a aplicação e criando tabelas...')
+  create_tables()
   yield
+  print('Finalizando a aplicação.')
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+  lifespan=lifespan,
+  title='EasyCrit - Session Manager',
+  description='Microserviço para gerenciamento de sessões de RPG.',
+  version='0.1.0',
+)
 
 origins = '*'
 
@@ -38,6 +53,34 @@ class CharacterBase(BaseModel):
   character_name: str = Field(..., min_length=1, max_length=100)
   biography: Optional[str] = Field(None, max_length=1000)
   player_id: int = Field(..., gt=0)
+
+
+app.add_middleware(JWTAuthMiddleware)
+
+
+@app.post(
+  '/campaigns',
+  response_model=schemas.Campaign,
+  status_code=status.HTTP_201_CREATED,
+  tags=['Campaigns'],
+)
+def create_campaign(campaign: schemas.CampaignCreate, db: Session = Depends(get_db)):
+  """
+  Cria uma nova campanha no banco de dados.
+  """
+  db_campaign = models.Session(**campaign.model_dump())
+
+  try:
+    db.add(db_campaign)
+    db.commit()
+    db.refresh(db_campaign)
+    return db_campaign
+  except Exception as e:
+    db.rollback()
+    print(f'Erro ao criar campanha: {e}')
+    raise HTTPException(
+      status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Ocorreu um erro interno ao criar a campanha.'
+    )
 
 
 class CharacterCreate(CharacterBase):
