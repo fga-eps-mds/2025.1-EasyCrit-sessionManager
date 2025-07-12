@@ -1,30 +1,44 @@
 import os
 
+from typing import Optional
+from contextlib import asynccontextmanager
+
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.middleware.auth import JWTAuthMiddleware
-
 from fastapi.staticfiles import StaticFiles
-from app.websocket import router as websocket_router
+from pydantic import BaseModel, Field, ConfigDict
+from sqlalchemy.orm import Session
 
-from app.database.database import get_db
+from app.database.database import get_db, create_tables, create_character as create_character_db
+from app.middleware.auth import JWTAuthMiddleware
+from app.websocket import router as websocket_router
 from app.routers import invite
 from app import models, schemas
 from sqlalchemy.orm import Session
 
 load_dotenv()
 
-DATABASE_URL = os.getenv('DATABASE_URL')
-print('DATABASE_URL carregado:', DATABASE_URL)
 
-# create_tables()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Contexto para gerenciar o ciclo de vida da aplicação.
+    Executa `create_tables()` na inicialização.
+    """
+    print("Iniciando a aplicação e criando tabelas...")
+    create_tables()
+    yield
+    print("Finalizando a aplicação.")
 
 app = FastAPI(
-  title='EasyCrit - Session Manager',
-  description='Microserviço para gerenciamento de sessões de RPG.',
-  version='0.1.0',
+    lifespan=lifespan,
+    title='EasyCrit - Session Manager',
+    description='Microserviço para gerenciamento de sessões de RPG.',
+    version='0.1.0',
 )
+
+origins = '*'
 
 app.add_middleware(
   CORSMiddleware,
@@ -37,35 +51,66 @@ app.add_middleware(
 app.include_router(invite.router)
 
 
-@app.post(
-  '/campaigns',
-  response_model=schemas.Campaign,
-  status_code=status.HTTP_201_CREATED,
-  tags=['Campaigns'],
-)
-def create_campaign(campaign: schemas.CampaignCreate, db: Session = Depends(get_db)):
-  db_campaign = models.Session(**campaign.model_dump())
-
-  try:
-    db.add(db_campaign)
-    db.commit()
-    db.refresh(db_campaign)
-    return db_campaign
-  except Exception as e:
-    db.rollback()
-    print(f'Erro ao criar campanha: {e}')
-    raise HTTPException(status_code=500, detail='Erro interno ao criar a campanha')
-
+class CharacterBase(BaseModel):
+    character_name: str = Field(..., min_length=1, max_length=100)
+    biography: Optional[str] = Field(None, max_length=1000)
+    player_id: int = Field(..., gt=0)
 
 app.add_middleware(JWTAuthMiddleware)
 
-# http://127.0.0.1:8000/static/websocket_test.html
-app.mount('/static', StaticFiles(directory='static'), name='static')
+@app.post(
+    '/campaigns',
+    response_model=schemas.Campaign, 
+    status_code=status.HTTP_201_CREATED,
+    tags=['Campaigns'],
+)
+def create_campaign(campaign: schemas.CampaignCreate, db: Session = Depends(get_db)): 
+    """
+    Cria uma nova campanha no banco de dados.
+    """
+    db_campaign = models.Session(**campaign.model_dump())
 
-# includes the router websocket
-app.include_router(websocket_router)
+    try:
+        db.add(db_campaign)
+        db.commit()
+        db.refresh(db_campaign)
+        return db_campaign
+    except Exception as e:
+        db.rollback()
+        print(f"Erro ao criar campanha: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='Ocorreu um erro interno ao criar a campanha.'
+        )
+
+class CharacterCreate(CharacterBase):
+  pass
+
+
+class CharacterResponse(CharacterBase):
+  character_id: int
+
+  model_config = ConfigDict(from_attributes=True)
 
 
 @app.get('/')
 def read_root():
-  return {'message': 'Bem-vindo à API de controle de sessão!'}
+  return {'message': 'Welcome to the Character Creation API! Use /docs to see endpoints.'}
+
+
+@app.post('/characters/', response_model=CharacterResponse, status_code=status.HTTP_201_CREATED)
+def create_character_endpoint(character_data: CharacterCreate, db: Session = Depends(get_db)):
+  if not character_data.character_name.strip():
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST, detail='Character name cannot be empty or just whitespace.'
+    )
+
+  result = create_character_db(db, character_data)
+
+  if result == 'conflict':
+    raise HTTPException(
+      status_code=status.HTTP_409_CONFLICT,
+      detail=f"A character with the name '{character_data.character_name}' already exists.",
+    )
+
+  return result
