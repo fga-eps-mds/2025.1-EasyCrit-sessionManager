@@ -7,6 +7,7 @@ from app.main import app
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env.test'))
 client = TestClient(app)
 
+
 def test_websocket_handshake_and_disconnect():
   session_id = 'test_session_handshake'
   user_id = 1

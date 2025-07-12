@@ -43,23 +43,23 @@ def get_db():
 
 def create_tables():
   if 'sqlite' in DATABASE_URL and os.path.exists('./test.db'):
-      print('Excluindo arquivo de banco de dados existente: ./test.db')
-      os.remove('./test.db')
+    print('Excluindo arquivo de banco de dados existente: ./test.db')
+    os.remove('./test.db')
 
   try:
-      with engine.connect() as connection:
-          connection.execute(text('CREATE SCHEMA IF NOT EXISTS session_manager'))
-          connection.commit()
-          print('Schema "session_manager" criado ou já existe.')
+    with engine.connect() as connection:
+      connection.execute(text('CREATE SCHEMA IF NOT EXISTS session_manager'))
+      connection.commit()
+      print('Schema "session_manager" criado ou já existe.')
   except Exception as e:
-      print(f'Erro ao criar schema "session_manager": {e}')
+    print(f'Erro ao criar schema "session_manager": {e}')
 
   try:
-      Base.metadata.create_all(bind=engine)
-      print('Tabelas do banco de dados criadas (ou já existem).')
+    Base.metadata.create_all(bind=engine)
+    print('Tabelas do banco de dados criadas (ou já existem).')
   except Exception as e:
-      print(f'Erro ao criar tabelas: {e}')
-      raise
+    print(f'Erro ao criar tabelas: {e}')
+    raise
 
 
 def get_character_by_name(db_session, character_name: str):
