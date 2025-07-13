@@ -19,6 +19,9 @@ from app.routers import invite
 from app.websocket import router as websocket_router
 from app.websocket.connection_manager import startup_event_redis, shutdown_event_redis
 from app import models, schemas
+# TODO: Importe a dependência de autenticação se for usá-la em endpoints definidos aqui
+# from app.middleware.auth import get_current_user
+
 
 load_dotenv()
 
@@ -40,32 +43,37 @@ app = FastAPI(
   version='0.1.0',
 )
 
-origins = '*'
+origins = [os.getenv('FRONTEND_URL', 'http://localhost:8000')]
 
 app.add_middleware(
   CORSMiddleware,
-  allow_origins=[os.getenv('FRONTEND_URL', 'http://localhost:3000')],
+  allow_origins=origins,
   allow_credentials=True,
   allow_methods=['*'],
   allow_headers=['*'],
 )
 
 app.add_middleware(JWTAuthMiddleware)
+
 app.include_router(invite.router)
 app.include_router(websocket_router)
 
 
+# TODO: Mova os schemas CharacterBase, CharacterCreate, CharacterResponse para um arquivo schemas/character.py se a lista crescer
 class CharacterBase(BaseModel):
   character_name: str = Field(..., min_length=1, max_length=100)
   biography: Optional[str] = Field(None, max_length=1000)
   player_id: int = Field(..., gt=0)
 
 
+# TODO: Mova o endpoint /campaigns para um router dedicado (ex: routers/campaigns.py)
+# TODO: Adicione a dependência de autenticação a este endpoint se ele precisar ser protegido
 @app.post(
   '/campaigns',
   response_model=schemas.Campaign,
   status_code=status.HTTP_201_CREATED,
   tags=['Campaigns'],
+  # dependencies=[Depends(get_current_user)] # Exemplo de como proteger
 )
 def create_campaign(campaign: schemas.CampaignCreate, db: Session = Depends(get_db)):
   db_campaign = models.Session(**campaign.model_dump())
@@ -94,15 +102,20 @@ class CharacterResponse(CharacterBase):
   model_config = ConfigDict(from_attributes=True)
 
 
+# TODO: Mova o endpoint / para um router dedicado (ex: routers/root.py)
 @app.get('/')
 def read_root():
   return {'message': 'Welcome to the EasyCrit Session Manager API! Use /docs to see endpoints.'}
 
 
+# TODO: Mova o endpoint /characters/ para um router dedicado (ex: routers/characters.py)
+# TODO: Adicione a dependência de autenticação a este endpoint se ele precisar ser protegido
 @app.post(
   '/characters/',
   response_model=CharacterResponse,
   status_code=status.HTTP_201_CREATED,
+  tags=['Characters'],  # Adicionado tag
+  # dependencies=[Depends(get_current_user)] # Exemplo de como proteger
 )
 def create_character_endpoint(character_data: CharacterCreate, db: Session = Depends(get_db)):
   if not character_data.character_name.strip():

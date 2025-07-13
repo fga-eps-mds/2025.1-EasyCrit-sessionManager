@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import date, datetime
 
 
@@ -18,3 +18,12 @@ class Campaign(CampaignBase):
   session_id: int
 
   model_config = ConfigDict(from_attributes=True)
+
+
+class JoinSessionRequest(BaseModel):
+  invite_code: str = Field(..., min_length=1)
+
+
+class JoinSessionResponse(BaseModel):
+  session_id: int
+  user_id: str
