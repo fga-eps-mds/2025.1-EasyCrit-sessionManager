@@ -13,16 +13,14 @@ from app.database.database import get_db, create_tables, create_character as cre
 from app.middleware.auth import JWTAuthMiddleware
 from app.routers import invite
 from app import models, schemas
+from app.websocket import router as websocket_router
 
 load_dotenv()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-  """
-  Contexto para gerenciar o ciclo de vida da aplicação.
-  Executa `create_tables()` na inicialização.
-  """
+
   print('Iniciando a aplicação e criando tabelas...')
   create_tables()
   yield
@@ -48,12 +46,13 @@ app.add_middleware(
 
 app.include_router(invite.router)
 
+app.include_router(websocket_router)
+
 
 class CharacterBase(BaseModel):
   character_name: str = Field(..., min_length=1, max_length=100)
   biography: Optional[str] = Field(None, max_length=1000)
   player_id: int = Field(..., gt=0)
-
 
 app.add_middleware(JWTAuthMiddleware)
 
@@ -65,9 +64,7 @@ app.add_middleware(JWTAuthMiddleware)
   tags=['Campaigns'],
 )
 def create_campaign(campaign: schemas.CampaignCreate, db: Session = Depends(get_db)):
-  """
-  Cria uma nova campanha no banco de dados.
-  """
+
   db_campaign = models.Session(**campaign.model_dump())
 
   try:

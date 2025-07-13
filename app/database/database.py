@@ -38,7 +38,6 @@ def get_db():
   finally:
     db.close()
 
-
 def create_tables():
   db_path = DATABASE_URL.replace('sqlite:///./', './')
   if os.path.exists(db_path) and db_path.endswith('test.db'):
@@ -47,7 +46,6 @@ def create_tables():
 
   Base.metadata.create_all(bind=engine)
   print('Database tables created (or already exist).')
-
 
 def get_character_by_name(db_session, character_name: str):
   return db_session.query(Character).filter(Character.character_name == character_name).first()
