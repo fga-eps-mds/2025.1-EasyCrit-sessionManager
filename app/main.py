@@ -16,12 +16,14 @@ from app.database.database import (
 )
 from app.middleware.auth import JWTAuthMiddleware
 from app.routers import invite
-from app import models # Manter a importação de models
+from app import models  # Manter a importação de models
+
 # Importar schemas específicos diretamente
-from app.schemas import Campaign, CampaignCreate, JoinSessionRequest, JoinSessionResponse # Adicionado JoinSessionRequest, JoinSessionResponse
+from app.schemas import Campaign, CampaignCreate  # Adicionado JoinSessionRequest, JoinSessionResponse
+
 # Importar funções do connection_manager
 from app.websocket.connection_manager import startup_event_redis, shutdown_event_redis
-from app.websocket import router as websocket_router # Manter a importação do router
+from app.websocket import router as websocket_router  # Manter a importação do router
 
 load_dotenv()
 
@@ -80,12 +82,12 @@ class CharacterBase(BaseModel):
 # TODO: Adicione a dependência de autenticação a este endpoint se ele precisar ser protegido
 @app.post(
   '/campaigns',
-  response_model=Campaign, # Usar Campaign diretamente
+  response_model=Campaign,  # Usar Campaign diretamente
   status_code=status.HTTP_201_CREATED,
   tags=['Campaigns'],
   # dependencies=[Depends(get_current_user)] # Exemplo de como proteger
 )
-def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)): # Usar CampaignCreate diretamente
+def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)):  # Usar CampaignCreate diretamente
   db_campaign = models.Session(**campaign.model_dump())
 
   try:

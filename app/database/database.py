@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, Text, text
+from sqlalchemy import create_engine, Column, Integer, Text
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
@@ -40,6 +40,7 @@ def get_db():
   finally:
     db.close()
 
+
 def create_tables():
   if 'sqlite' in DATABASE_URL and os.path.exists('./test.db'):
     print('Excluindo arquivo de banco de dados existente: ./test.db')
@@ -59,6 +60,7 @@ def create_tables():
   except Exception as e:
     print(f'Erro ao criar tabelas: {e}')
     raise
+
 
 def get_character_by_name(db_session, character_name: str):
   return db_session.query(Character).filter(Character.character_name == character_name).first()

@@ -9,7 +9,7 @@ from .database.database import Base
 
 class Session(Base):
   __tablename__ = 'session'
-  #__table_args__ = {'schema': 'session_manager'}
+  # __table_args__ = {'schema': 'session_manager'}
 
   session_id = Column(Integer, primary_key=True, index=True)
 
@@ -25,7 +25,7 @@ class Session(Base):
 
 class Invite(Base):
   __tablename__ = 'invites'
-  #__table_args__ = {'schema': 'session_manager'}
+  # __table_args__ = {'schema': 'session_manager'}
 
   token = Column(String, primary_key=True, default=lambda: str(uuid4()))
   session_id = Column(Integer, ForeignKey('session.session_id'), nullable=False)
@@ -36,7 +36,7 @@ class Invite(Base):
 
 class UserSession(Base):
   __tablename__ = 'user_sessions'
-  #__table_args__ = {'schema': 'session_manager'}
+  # __table_args__ = {'schema': 'session_manager'}
 
   id = Column(String, primary_key=True, default=lambda: str(uuid4()))
   user_id = Column(String, nullable=False)
