@@ -45,13 +45,13 @@ def create_tables():
     print('Excluindo arquivo de banco de dados existente: ./test.db')
     os.remove('./test.db')
 
-  try:
-    with engine.connect() as connection:
-      connection.execute(text('CREATE SCHEMA IF NOT EXISTS session_manager'))
-      connection.commit()
-      print('Schema "session_manager" criado ou já existe.')
-  except Exception as e:
-    print(f'Erro ao criar schema "session_manager": {e}')
+  # try:
+  #   with engine.connect() as connection:
+  #     connection.execute(text('CREATE SCHEMA IF NOT EXISTS session_manager'))
+  #     connection.commit()
+  #     print('Schema "session_manager" criado ou já existe.')
+  # except Exception as e:
+  #   print(f'Erro ao criar schema "session_manager": {e}')
 
   try:
     Base.metadata.create_all(bind=engine)
