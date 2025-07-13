@@ -16,20 +16,25 @@ from app.database.database import (
 )
 from app.middleware.auth import JWTAuthMiddleware
 from app.routers import invite
-from app import models, schemas
-from app.websocket import router as websocket_router
+from app import models # Manter a importação de models
+# Importar schemas específicos diretamente
+from app.schemas import Campaign, CampaignCreate, JoinSessionRequest, JoinSessionResponse # Adicionado JoinSessionRequest, JoinSessionResponse
+# Importar funções do connection_manager
+from app.websocket.connection_manager import startup_event_redis, shutdown_event_redis
+from app.websocket import router as websocket_router # Manter a importação do router
 
 load_dotenv()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
   print('Iniciando a aplicação e criando tabelas...')
   create_tables()
+  # Chamar as funções importadas do connection_manager
   await startup_event_redis()
   yield
   print('Finalizando a aplicação.')
+  # Chamar as funções importadas do connection_manager
   await shutdown_event_redis()
 
 
@@ -40,7 +45,10 @@ app = FastAPI(
   version='0.1.0',
 )
 
-origins = '*'
+# Use a variável de ambiente FRONTEND_URL para configurar as origens permitidas
+# Se FRONTEND_URL não estiver definida, use http://localhost:3000 como padrão (com base no frontend)
+# Se precisar permitir múltiplas origens, ajuste esta lista
+origins = [os.getenv('FRONTEND_URL', 'http://localhost:3000')]
 
 app.add_middleware(
   CORSMiddleware,
@@ -60,8 +68,6 @@ app.add_middleware(JWTAuthMiddleware)
 app.include_router(invite.router)
 app.include_router(websocket_router)
 
-app.include_router(websocket_router)
-
 
 # TODO: Mova os schemas CharacterBase, CharacterCreate, CharacterResponse para um arquivo schemas/character.py se a lista crescer
 class CharacterBase(BaseModel):
@@ -72,9 +78,6 @@ class CharacterBase(BaseModel):
 
 # TODO: Mova o endpoint /campaigns para um router dedicado (ex: routers/campaigns.py)
 # TODO: Adicione a dependência de autenticação a este endpoint se ele precisar ser protegido
-app.add_middleware(JWTAuthMiddleware)
-
-
 @app.post(
   '/campaigns',
   response_model=Campaign, # Usar Campaign diretamente
@@ -82,8 +85,7 @@ app.add_middleware(JWTAuthMiddleware)
   tags=['Campaigns'],
   # dependencies=[Depends(get_current_user)] # Exemplo de como proteger
 )
-def create_campaign(campaign: schemas.CampaignCreate, db: Session = Depends(get_db)):
-
+def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)): # Usar CampaignCreate diretamente
   db_campaign = models.Session(**campaign.model_dump())
 
   try:
