@@ -1,19 +1,29 @@
 from sqlalchemy import create_engine, Column, Integer, Text
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.pool import StaticPool
 import os
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if not DATABASE_URL:
-  DATABASE_URL = 'sqlite:///./test.db'
+  # Use um caminho temporário para o banco de dados durante testes
+  DATABASE_URL = f'sqlite:///{os.getcwd()}/test.db'
   print(f'AVISO: A variável de ambiente DATABASE_URL não foi definida. Usando "{DATABASE_URL}" como padrão.')
 
 connect_args = {'check_same_thread': False} if 'sqlite' in DATABASE_URL else {}
 
-engine = create_engine(
-  DATABASE_URL,
-  connect_args=connect_args,
-)
+# Se for banco em memória, não tenta remover arquivo
+if 'sqlite' in DATABASE_URL and ':memory:' in DATABASE_URL:
+  engine = create_engine(
+    DATABASE_URL,
+    connect_args={'check_same_thread': False},
+    poolclass=StaticPool,
+  )
+else:
+  engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args,
+  )
 
 SessionLocal = sessionmaker(
   autocommit=False,
@@ -42,18 +52,10 @@ def get_db():
 
 
 def create_tables():
-  if 'sqlite' in DATABASE_URL and os.path.exists('./test.db'):
+  # Só remove arquivo se não for banco em memória
+  if 'sqlite' in DATABASE_URL and os.path.exists('./test.db') and ':memory:' not in DATABASE_URL:
     print('Excluindo arquivo de banco de dados existente: ./test.db')
     os.remove('./test.db')
-
-  # try:
-  #   with engine.connect() as connection:
-  #     connection.execute(text('CREATE SCHEMA IF NOT EXISTS session_manager'))
-  #     connection.commit()
-  #     print('Schema "session_manager" criado ou já existe.')
-  # except Exception as e:
-  #   print(f'Erro ao criar schema "session_manager": {e}')
-
   try:
     Base.metadata.create_all(bind=engine)
     print('Tabelas do banco de dados criadas (ou já existem).')
