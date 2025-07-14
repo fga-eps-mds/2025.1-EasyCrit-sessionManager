@@ -1,19 +1,11 @@
-import os
-
-# Use banco temporário em disco para testes
-os.environ['DATABASE_URL'] = 'sqlite:///./test_temp.db'
-
-# Remove o banco antes de rodar (apenas antes dos testes)
-if os.path.exists('test_temp.db'):
-  os.remove('test_temp.db')
+# Este arquivo é duplicado dos testes principais em tests/test_main.py e pode ser removido ou mantido apenas para referência.
+# Recomenda-se rodar os testes a partir da pasta tests/.
 
 from fastapi.testclient import TestClient
-from app.database.database import Base, engine
-import app.models  # Importa models para registrar todas as tabelas!
+from app.database.database import create_tables
 from .main import app
 
-# Cria as tabelas no banco temporário
-Base.metadata.create_all(bind=engine)
+create_tables()
 
 client = TestClient(app)
 
@@ -62,6 +54,3 @@ def test_existent_character():
   )
   assert response.status_code == 409
   assert response.json() == {'detail': "A character with the name 'existentcharacter' already exists."}
-
-
-# NÃO remova o banco após os testes aqui! Faça isso manualmente ou com fixture/teardown se necessário.
