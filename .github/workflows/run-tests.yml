@@ -17,6 +17,7 @@ jobs:
             run: |
               pip install -r requirements.txt
               pip install pyjwt
+              pip install "redis[asyncio]"
     
           - name: 🧪 Run tests
             run: pytest --maxfail=1 --disable-warnings -q
@@ -35,4 +36,4 @@ jobs:
               coverage run -m pytest
               coverage report
               coverage html
-              echo "📊 Cobertura de testes gerada. Resultado %"
+              coverage report | grep TOTAL
