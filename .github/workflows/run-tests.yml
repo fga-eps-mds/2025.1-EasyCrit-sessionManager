@@ -14,7 +14,9 @@ jobs:
               python-version: '3.12'
     
           - name: 📦 Install dependencies
-            run: pip install -r requirements.txt
+            run: |
+              pip install -r requirements.txt
+              pip install pyjwt
     
           - name: 🧪 Run tests
             run: pytest --maxfail=1 --disable-warnings -q
@@ -33,4 +35,4 @@ jobs:
               coverage run -m pytest
               coverage report
               coverage html
-              echo "📊 Cobertura de testes gerada. Resultado %  
+              echo "📊 Cobertura de testes gerada. Resultado %"
