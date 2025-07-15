@@ -133,7 +133,8 @@ class ConnectionManager:
       except Exception as e:
         print(f'Erro inesperado ao publicar mensagem no Redis: {e}')
     else:
-      print('Cliente Redis não disponível. Mensagem não publicada.')
+      print('Cliente Redis não disponível. Mensagem não publicada. Fazendo broadcast local.')
+      await self.broadcast(message)
 
 
 manager = ConnectionManager()

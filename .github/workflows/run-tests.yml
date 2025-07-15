@@ -1,0 +1,39 @@
+name: run tests
+on: [push]
+
+jobs:
+    Test:
+        runs-on: ubuntu-latest
+        steps:
+          - name: 🔦 Checkout
+            uses: actions/checkout@v4
+    
+          - name: 🧰 Setup python
+            uses: actions/setup-python@v5
+            with:
+              python-version: '3.12'
+    
+          - name: 📦 Install dependencies
+            run: |
+              pip install -r requirements.txt
+              pip install pyjwt
+              pip install "redis[asyncio]"
+    
+          - name: 🧪 Run tests
+            run: pytest --maxfail=1 --disable-warnings -q
+    
+          - name: ❌ Em caso de falha
+            if: failure()
+            run: echo "🚫 Os testes falharam. Verifique os logs para mais detalhes."
+
+          - name: ✅ Em caso de sucesso 
+            if: success()
+            run: echo "✅ Todos os testes passaram com sucesso!"
+
+          - name: 📊 Test coverage
+            run: |
+              pip install coverage
+              coverage run -m pytest
+              coverage report
+              coverage html
+              coverage report | grep TOTAL
