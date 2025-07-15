@@ -6,13 +6,13 @@ import os
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if not DATABASE_URL:
-  # Use um caminho temporário para o banco de dados durante testes
+  # Using a temporary path to a database during tests
   DATABASE_URL = f'sqlite:///{os.getcwd()}/test.db'
   print(f'WARN: The DATABASE_URL environment variable was not found. Using "{DATABASE_URL}" as the default url.')
 
 connect_args = {'check_same_thread': False} if 'sqlite' in DATABASE_URL else {}
 
-# Se for banco em memória, não tenta remover arquivo
+# If the databse is stored in memory (sqlite) don't try to remove the file
 if 'sqlite' in DATABASE_URL and ':memory:' in DATABASE_URL:
   engine = create_engine(
     DATABASE_URL,
@@ -52,7 +52,7 @@ def get_db():
 
 
 def create_tables():
-  # Só remove arquivo se não for banco em memória
+  # Will only remove the .db file if the database is sotred on memory (sqlite)
   if 'sqlite' in DATABASE_URL and os.path.exists('./test.db') and ':memory:' not in DATABASE_URL:
     print('Removing .db file: ./test.db')
     os.remove('./test.db')
