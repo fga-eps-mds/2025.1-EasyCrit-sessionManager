@@ -1,6 +1,6 @@
 import os
 
-# Garante que o banco será sempre em memória para os testes
+# Use the database on memory for the tests
 os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
 
 import pytest
