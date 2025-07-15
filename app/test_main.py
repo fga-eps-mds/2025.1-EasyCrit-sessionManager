@@ -1,6 +1,3 @@
-# Este arquivo é duplicado dos testes principais em tests/test_main.py e pode ser removido ou mantido apenas para referência.
-# Recomenda-se rodar os testes a partir da pasta tests/.
-
 from fastapi.testclient import TestClient
 from app.database.database import create_tables
 from .main import app
