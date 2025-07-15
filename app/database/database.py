@@ -8,7 +8,7 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 if not DATABASE_URL:
   # Use um caminho temporário para o banco de dados durante testes
   DATABASE_URL = f'sqlite:///{os.getcwd()}/test.db'
-  print(f'AVISO: A variável de ambiente DATABASE_URL não foi definida. Usando "{DATABASE_URL}" como padrão.')
+  print(f'WARN: The DATABASE_URL environment variable was not found. Using "{DATABASE_URL}" as the default url.')
 
 connect_args = {'check_same_thread': False} if 'sqlite' in DATABASE_URL else {}
 
@@ -54,13 +54,13 @@ def get_db():
 def create_tables():
   # Só remove arquivo se não for banco em memória
   if 'sqlite' in DATABASE_URL and os.path.exists('./test.db') and ':memory:' not in DATABASE_URL:
-    print('Excluindo arquivo de banco de dados existente: ./test.db')
+    print('Removing .db file: ./test.db')
     os.remove('./test.db')
   try:
     Base.metadata.create_all(bind=engine)
-    print('Tabelas do banco de dados criadas (ou já existem).')
+    print('Database tables created.')
   except Exception as e:
-    print(f'Erro ao criar tabelas: {e}')
+    print(f'ERROR: Error while creating database tables: {e}')
     raise
 
 
